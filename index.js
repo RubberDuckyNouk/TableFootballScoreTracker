@@ -20,9 +20,9 @@ const isProduction = process.env.NODE_ENV === 'production'; //only use SSL db co
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-
+const path = require("path");
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Serve static files (CSS, JS, images)
 app.use(express.static(__dirname));
