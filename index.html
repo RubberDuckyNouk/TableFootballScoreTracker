@@ -35,7 +35,14 @@
     <button onclick="saveInputTeam()">Save</button>
     <p id="statusTeamGame"></p>
 
+
+<!-- front end JS -->
     <script>
+    // Define API_BASE once, depending on hostname
+    const API_BASE = window.location.hostname === 'localhost'
+        ? 'http://localhost:3000'   //for local testing
+        : 'https://tablefootballscoretracker.onrender.com/';  // for prod
+
         //Single game
         async function saveInputSingle() {
             const inputBoxWinner = document.getElementById("inputBoxWinner");
@@ -49,7 +56,7 @@
             }
 
             try {
-                const responseSingle = await fetch("http://localhost:3000/saveSingle", {
+                const responseSingle = await fetch(`${API_BASE}/saveSingle`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ winner, loser })
@@ -83,7 +90,7 @@
             }
 
             try {
-                const responseTeam = await fetch("http://localhost:3000/saveTeam", {
+                const responseTeam = await fetch(`${API_BASE}/saveTeam`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ winnerAttack, winnerDefense, loserAttack, loserDefense })
