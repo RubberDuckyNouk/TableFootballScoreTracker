@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body >
+    <!-- header -->
+    <h1 class="m-5">Welcome to the table football score tracker</h1>
+
+    <!-- Single Game -->
+    <h2>Enter player names for single game</h2>
+    <h3>Winning player - Losing player</h3>
+        <div>
+        <input type="text" id="inputBoxWinner" class = "win" placeholder="Enter the name of the winner">
+        <span class="vs">vs</span>
+        <input type="text" id="inputBoxLoser" class = "lose" placeholder="Enter the name of the loser">
+        </div>
+    <button onclick="saveInputSingle()">Save</button>
+    <p id="statusSingleGame"></p>
+
+    <!-- Team Game -->
+    <h2>Enter player names for team game</h2>
+    <h3>Winning team - Losing team</h3>
+        <div>
+        <input type="text" id="inputBoxWinnerAttack" class = "win" placeholder="Winning attacker">
+        <input type="text" id="inputBoxWinnerDefense" class = "win" placeholder="Winning defender">
+        <span class="vs">vs</span>
+        <input type="text" id="inputBoxLoserAttack" class = "lose" placeholder="Losing attacker">
+        <input type="text" id="inputBoxLoserDefense" class = "lose" placeholder="Losing defender">
+        </div>
+    <button onclick="saveInputTeam()">Save</button>
+    <p id="statusTeamGame"></p>
+
+    <script>
+        //Single game
+        async function saveInputSingle() {
+            const inputBoxWinner = document.getElementById("inputBoxWinner");
+            const inputBoxLoser = document.getElementById("inputBoxLoser");
+            //prevent spaces in input
+            const winner = inputBoxWinner.value.trim();
+            const loser = inputBoxLoser.value.trim();
+
+            if (!winner || !loser) {
+                return alert("Both fields are required for a single game!");
+            }
+
+            try {
+                const responseSingle = await fetch("http://localhost:3000/saveSingle", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ winner, loser })
+                });
+
+                const resultSingle = await responseSingle.json();
+                document.getElementById("statusSingleGame").innerText = resultSingle.message;
+
+                // Clear fields after successful save
+                inputBoxWinner.value = "";
+                inputBoxLoser.value = "";
+            } catch (error) {
+                console.error("Error saving single game:", error);
+                alert("Failed to save data. Check server connection.");
+            }
+        }
+        //team game
+        async function saveInputTeam() {
+            const inputBoxWinnerAttack = document.getElementById("inputBoxWinnerAttack");
+            const inputBoxWinnerDefense = document.getElementById("inputBoxWinnerDefense");
+            const inputBoxLoserAttack = document.getElementById("inputBoxLoserAttack");
+            const inputBoxLoserDefense = document.getElementById("inputBoxLoserDefense");
+            //prevent spaces in input
+            const winnerAttack = inputBoxWinnerAttack.value.trim();
+            const winnerDefense = inputBoxWinnerDefense.value.trim();
+            const loserAttack = inputBoxLoserAttack.value.trim();
+            const loserDefense = inputBoxLoserDefense.value.trim();
+
+            if (!winnerAttack || !winnerDefense || !loserAttack || !loserDefense) {
+                return alert("All fields are required for a team game!");
+            }
+
+            try {
+                const responseTeam = await fetch("http://localhost:3000/saveTeam", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ winnerAttack, winnerDefense, loserAttack, loserDefense })
+                });
+
+                const resultTeam = await responseTeam.json();
+                document.getElementById("statusTeamGame").innerText = resultTeam.message;
+
+                // Clear fields after successful save
+                inputBoxWinnerAttack.value = "";
+                inputBoxWinnerDefense.value = "";
+                inputBoxLoserAttack.value = "";
+                inputBoxLoserDefense.value = "";
+            } catch (error) {
+                console.error("Error saving team game:", error);
+                alert("Failed to save data. Check server connection.");
+            }
+        }
+    </script>
+</body>
+</html>
