@@ -1,0 +1,93 @@
+/* Global Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+    display: flex;               /* Enables Flexbox to apply CSS to div & etc. elements */
+    flex-direction: column;      /* Arrange items in a column */
+    justify-content: center;     /* Center vertically */
+    align-items: center;         /* Center horizontally */
+    min-height: 100vh;  
+    font-size: 1rem; /* Base font size for scaling */
+}
+
+h1 {
+    color: #2e7832;
+    font-size: 2rem; /* Relative font size for h1 */
+}
+
+h2 {
+    color: #333;
+    font-size: 1.5rem; 
+}
+
+
+
+/* input box styles */
+input[type="text"] {
+    padding: 0.6em; 
+    margin: 0.3em;  
+    width: 15em;    
+    font-size: 1em; 
+    border-radius: 0.3em; 
+    font-weight: 600;
+}
+.input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1em;
+    flex-wrap: wrap;
+}
+.win {
+    border: 0.2em solid #179733; 
+    color: #179733;
+}
+
+.lose {
+    border: 0.2em solid #971717; 
+    color: #971717;
+}
+
+/* Media query for screens smaller than 768px (e.g., mobile) */
+@media (max-width: 768px) {
+    .input-container {
+        flex-direction: column; /* Stack items vertically */
+        gap: 1em; /* Add space between items vertically */
+    }
+
+    .vs {
+        margin: 1em 0; /* Add space around the vs text */
+    }
+
+    input[type="text"] {
+        width: 80%; /* Adjust the width of the input boxes for smaller screens */
+    }
+}
+
+/* end input box styles */
+
+button {
+    padding: 0.6em 1.2em; /* Padding in relative units */
+    font-size: 1em;       /* Font size relative to the base font size */
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 0.3em;  /* Border radius in relative units */
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+p {
+    font-size: 1.2em;  /* Font size relative to the base font size */
+    color: #555;
+}
+
+span {
+    font-weight: 800;
+    font-size: 1.2rem; /* Relative font size */
+}

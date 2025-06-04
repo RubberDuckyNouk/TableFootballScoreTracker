@@ -31,7 +31,7 @@ app.use(express.json());
 
 // Serve the HTML file at the root route
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
  
 //single game data save
@@ -82,5 +82,5 @@ app.post("/saveTeam", async (req, res) => {
   
 
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
