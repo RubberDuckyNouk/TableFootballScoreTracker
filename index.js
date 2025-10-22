@@ -619,14 +619,14 @@ app.get("/recentGames", async (req, res) => {
   }
 });
 
-// Delete a game
+// Delete a game and revert rating changes
 app.delete("/deleteGame/:type/:id", async (req, res) => {
   const { type, id } = req.params;
 
   try {
     const tableName = type === 'single' ? 'single_game_results' : 'team_game_results';
 
-    // Delete the game
+    // Get the game data before deleting
     const result = await pool.query(
       `DELETE FROM ${tableName} WHERE id = $1 RETURNING *`,
       [id]
@@ -636,7 +636,60 @@ app.delete("/deleteGame/:type/:id", async (req, res) => {
       return res.status(404).json({ error: "Game not found" });
     }
 
-    res.json({ message: "Game deleted successfully", game: result.rows[0] });
+    const game = result.rows[0];
+
+    // Revert rating changes for all players involved
+    if (type === 'single') {
+      // Revert winner's rating
+      if (game.winner_rating_before !== null && game.winner_rating_after !== null) {
+        const ratingChange = game.winner_rating_after - game.winner_rating_before;
+        await pool.query(
+          `UPDATE players
+           SET rating = rating - $1,
+               games_played = GREATEST(games_played - 1, 0),
+               updated_at = CURRENT_TIMESTAMP
+           WHERE LOWER(name) = LOWER($2)`,
+          [ratingChange, game.winner]
+        );
+      }
+
+      // Revert loser's rating
+      if (game.loser_rating_before !== null && game.loser_rating_after !== null) {
+        const ratingChange = game.loser_rating_after - game.loser_rating_before;
+        await pool.query(
+          `UPDATE players
+           SET rating = rating - $1,
+               games_played = GREATEST(games_played - 1, 0),
+               updated_at = CURRENT_TIMESTAMP
+           WHERE LOWER(name) = LOWER($2)`,
+          [ratingChange, game.loser]
+        );
+      }
+    } else {
+      // Team game - revert all 4 players
+      const players = [
+        { name: game.winner_attack, before: game.winner_attack_rating_before, after: game.winner_attack_rating_after },
+        { name: game.winner_defense, before: game.winner_defense_rating_before, after: game.winner_defense_rating_after },
+        { name: game.loser_attack, before: game.loser_attack_rating_before, after: game.loser_attack_rating_after },
+        { name: game.loser_defense, before: game.loser_defense_rating_before, after: game.loser_defense_rating_after }
+      ];
+
+      for (const player of players) {
+        if (player.before !== null && player.after !== null) {
+          const ratingChange = player.after - player.before;
+          await pool.query(
+            `UPDATE players
+             SET rating = rating - $1,
+                 games_played = GREATEST(games_played - 1, 0),
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE LOWER(name) = LOWER($2)`,
+            [ratingChange, player.name]
+          );
+        }
+      }
+    }
+
+    res.json({ message: "Game deleted and ratings reverted successfully", game });
   } catch (err) {
     console.error("Error deleting game:", err);
     res.status(500).json({ error: "Failed to delete game" });
