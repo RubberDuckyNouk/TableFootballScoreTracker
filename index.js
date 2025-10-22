@@ -453,6 +453,15 @@ app.get("/stats", async (req, res) => {
       }))
       .sort((a, b) => b.rating - a.rating); // Sort by rating instead of wins
 
+    // Add rank with proper tie handling
+    let currentRank = 1;
+    statsArray.forEach((player, index) => {
+      if (index > 0 && player.rating < statsArray[index - 1].rating) {
+        currentRank = index + 1; // Skip ranks for ties
+      }
+      player.rank = currentRank;
+    });
+
     res.json(statsArray);
   } catch (err) {
     console.error("DB query error:", err);
