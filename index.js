@@ -117,14 +117,14 @@ app.get("/players", async (req, res) => {
 //get player statistics
 app.get("/stats", async (req, res) => {
   try {
-    // Get single game wins (case-insensitive)
+    // Get single game wins
     const singleWinsQuery = `
       SELECT LOWER(winner) as player_name, COUNT(*) as wins
       FROM single_game_results
       GROUP BY LOWER(winner)
     `;
 
-    // Get single game losses (case-insensitive)
+    // Get single game losses
     const singleLossesQuery = `
       SELECT LOWER(loser) as player_name, COUNT(*) as losses
       FROM single_game_results
