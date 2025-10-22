@@ -237,18 +237,143 @@ span.vs {
     color: #333;
 }
 
+/* Statistics Styles */
+.stats-subtitle {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.stats-loading, .stats-error {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
+}
+
+.stats-error {
+    color: #971717;
+}
+
+.stats-container {
+    width: 100%;
+    max-width: 500px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
+    background: #f8f8f8;
+    border-radius: 0.5rem;
+    border-left: 4px solid #2e7832;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item.rank-1 {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    border-left-color: #d4af37;
+    font-weight: 700;
+}
+
+.stat-item.rank-2 {
+    background: linear-gradient(135deg, #c0c0c0 0%, #d8d8d8 100%);
+    border-left-color: #a0a0a0;
+    font-weight: 600;
+}
+
+.stat-item.rank-3 {
+    background: linear-gradient(135deg, #cd7f32 0%, #e8a87c 100%);
+    border-left-color: #b8722c;
+    font-weight: 600;
+}
+
+.stat-rank {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #666;
+    min-width: 35px;
+}
+
+.stat-name {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0 1rem;
+    text-transform: capitalize;
+}
+
+.stat-wins {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+}
+
+.stat-total {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2e7832;
+}
+
+.stat-breakdown {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.no-stats {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #888;
+}
+
+.no-stats p {
+    margin: 0.5rem 0;
+}
+
 /* Mobile-specific button optimizations */
 @media (max-width: 768px) {
     .toggle-container {
         width: 100%;
-        max-width: 400px;
+        max-width: 100%;
     }
 
     .toggle-btn {
         flex: 1;
-        padding: 0.875rem 1rem;
-        font-size: 0.95rem;
+        padding: 0.875rem 0.5rem;
+        font-size: 0.85rem;
         min-width: auto;
+    }
+
+    .stat-item {
+        padding: 0.875rem 1rem;
+    }
+
+    .stat-rank {
+        font-size: 1rem;
+        min-width: 30px;
+    }
+
+    .stat-name {
+        font-size: 1rem;
+        margin: 0 0.5rem;
+    }
+
+    .stat-total {
+        font-size: 1.1rem;
+    }
+
+    .stat-breakdown {
+        font-size: 0.75rem;
     }
 
     button {

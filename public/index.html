@@ -15,6 +15,7 @@
     <div class="toggle-container">
         <button class="toggle-btn active" onclick="showSingleGame()">Single Game</button>
         <button class="toggle-btn" onclick="showTeamGame()">Team Game</button>
+        <button class="toggle-btn" onclick="showStats()">Statistics</button>
     </div>
 
     <!-- Single Game -->
@@ -49,6 +50,15 @@
         <p id="statusTeamGame"></p>
     </section>
 
+    <!-- Statistics -->
+    <section class="game-section" id="statsSection" style="display: none;">
+        <h2>Player Statistics</h2>
+        <p class="stats-subtitle">Wins by player (case-insensitive)</p>
+        <div id="statsLoading" class="stats-loading">Loading statistics...</div>
+        <div id="statsError" class="stats-error" style="display: none;"></div>
+        <div id="statsContainer" class="stats-container"></div>
+    </section>
+
 
 <!-- front end JS -->
     <script>
@@ -61,21 +71,76 @@
         function showSingleGame() {
             document.getElementById('singleGameSection').style.display = 'flex';
             document.getElementById('teamGameSection').style.display = 'none';
-
-            // Update toggle button styles
+            document.getElementById('statsSection').style.display = 'none';
             const toggleBtns = document.querySelectorAll('.toggle-btn');
             toggleBtns[0].classList.add('active');
             toggleBtns[1].classList.remove('active');
+            toggleBtns[2].classList.remove('active');
         }
 
         function showTeamGame() {
             document.getElementById('singleGameSection').style.display = 'none';
             document.getElementById('teamGameSection').style.display = 'flex';
-
-            // Update toggle button styles
+            document.getElementById('statsSection').style.display = 'none';
             const toggleBtns = document.querySelectorAll('.toggle-btn');
             toggleBtns[0].classList.remove('active');
             toggleBtns[1].classList.add('active');
+            toggleBtns[2].classList.remove('active');
+        }
+
+        function showStats() {
+            document.getElementById('singleGameSection').style.display = 'none';
+            document.getElementById('teamGameSection').style.display = 'none';
+            document.getElementById('statsSection').style.display = 'flex';
+            const toggleBtns = document.querySelectorAll('.toggle-btn');
+            toggleBtns[0].classList.remove('active');
+            toggleBtns[1].classList.remove('active');
+            toggleBtns[2].classList.add('active');
+            loadStatistics();
+        }
+
+        async function loadStatistics() {
+            const container = document.getElementById('statsContainer');
+            const loading = document.getElementById('statsLoading');
+            const errorDiv = document.getElementById('statsError');
+
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                if (!response.ok) throw new Error('Failed to fetch statistics');
+
+                const stats = await response.json();
+                loading.style.display = 'none';
+
+                if (stats.length === 0) {
+                    container.innerHTML = '<div class="no-stats"><p>No games recorded yet!</p><p>Play some games to see statistics here.</p></div>';
+                    return;
+                }
+
+                stats.forEach((player, index) => {
+                    const rank = index + 1;
+                    const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                    const statItem = document.createElement('div');
+                    statItem.className = `stat-item ${rankClass}`;
+                    statItem.innerHTML = `
+                        <div class="stat-rank">#${rank}</div>
+                        <div class="stat-name">${player.name}</div>
+                        <div class="stat-wins">
+                            <div class="stat-total">${player.totalWins}</div>
+                            <div class="stat-breakdown">Single: ${player.singleWins} | Team: ${player.teamWins}</div>
+                        </div>
+                    `;
+                    container.appendChild(statItem);
+                });
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                loading.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Failed to load statistics. Please try again.';
+            }
         }
 
         //Single game

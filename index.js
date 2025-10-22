@@ -79,7 +79,71 @@ app.post("/saveTeam", async (req, res) => {
       res.status(500).json({ error: "Failed to save to database" });
     }
   });
-  
+
+//get player statistics
+app.get("/stats", async (req, res) => {
+  try {
+    // Get single game wins (case-insensitive)
+    const singleWinsQuery = `
+      SELECT LOWER(winner) as player_name, COUNT(*) as wins
+      FROM single_game_results
+      GROUP BY LOWER(winner)
+    `;
+
+    // Get team game wins (case-insensitive, counting both attack and defense positions)
+    const teamWinsQuery = `
+      SELECT player_name, SUM(wins) as wins FROM (
+        SELECT LOWER(winner_attack) as player_name, COUNT(*) as wins
+        FROM team_game_results
+        GROUP BY LOWER(winner_attack)
+        UNION ALL
+        SELECT LOWER(winner_defense) as player_name, COUNT(*) as wins
+        FROM team_game_results
+        GROUP BY LOWER(winner_defense)
+      ) combined
+      GROUP BY player_name
+    `;
+
+    const singleWins = await pool.query(singleWinsQuery);
+    const teamWins = await pool.query(teamWinsQuery);
+
+    // Combine results and aggregate wins
+    const playerStats = {};
+
+    // Add single game wins
+    singleWins.rows.forEach(row => {
+      const name = row.player_name;
+      if (!playerStats[name]) {
+        playerStats[name] = { singleWins: 0, teamWins: 0, totalWins: 0 };
+      }
+      playerStats[name].singleWins = parseInt(row.wins);
+      playerStats[name].totalWins += parseInt(row.wins);
+    });
+
+    // Add team game wins
+    teamWins.rows.forEach(row => {
+      const name = row.player_name;
+      if (!playerStats[name]) {
+        playerStats[name] = { singleWins: 0, teamWins: 0, totalWins: 0 };
+      }
+      playerStats[name].teamWins = parseInt(row.wins);
+      playerStats[name].totalWins += parseInt(row.wins);
+    });
+
+    // Convert to array and sort by total wins
+    const statsArray = Object.entries(playerStats)
+      .map(([name, stats]) => ({
+        name: name.charAt(0).toUpperCase() + name.slice(1), // Capitalize first letter for display
+        ...stats
+      }))
+      .sort((a, b) => b.totalWins - a.totalWins);
+
+    res.json(statsArray);
+  } catch (err) {
+    console.error("DB query error:", err);
+    res.status(500).json({ error: "Failed to fetch statistics" });
+  }
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
