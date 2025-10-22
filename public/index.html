@@ -166,7 +166,7 @@
                     return;
                 }
 
-                // Create bar chart showing wins
+                // Create stacked bar chart
                 const ctx = document.getElementById('statsChart').getContext('2d');
                 statsChart = new Chart(ctx, {
                     type: 'bar',
@@ -179,6 +179,13 @@
                                 backgroundColor: '#4CAF50',
                                 borderColor: '#2e7832',
                                 borderWidth: 1
+                            },
+                            {
+                                label: 'Losses',
+                                data: stats.map(p => p.totalLosses),
+                                backgroundColor: '#f44336',
+                                borderColor: '#971717',
+                                borderWidth: 1
                             }
                         ]
                     },
@@ -188,28 +195,28 @@
                         indexAxis: 'y',
                         scales: {
                             x: {
+                                stacked: true,
                                 beginAtZero: true,
                                 ticks: {
                                     stepSize: 1
                                 },
                                 title: {
                                     display: true,
-                                    text: 'Number of Wins'
+                                    text: 'Number of Games'
                                 }
                             },
                             y: {
-                                ticks: {
-                                    autoSkip: false
-                                }
+                                stacked: true
                             }
                         },
                         plugins: {
                             legend: {
-                                display: false
+                                display: true,
+                                position: 'top'
                             },
                             title: {
                                 display: true,
-                                text: 'Wins by Player',
+                                text: 'Wins vs Losses by Player',
                                 font: {
                                     size: 16
                                 }
