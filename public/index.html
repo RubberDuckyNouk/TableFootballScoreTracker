@@ -53,8 +53,8 @@
 
     <!-- Statistics -->
     <section class="game-section" id="statsSection" style="display: none;">
-        <h2>Player Statistics</h2>
-        <p class="stats-subtitle">Wins and losses by player</p>
+        <h2>Player Rankings</h2>
+        <p class="stats-subtitle">Ranked by points</p>
         <div id="statsLoading" class="stats-loading">Loading statistics...</div>
         <div id="statsError" class="stats-error" style="display: none;"></div>
 
@@ -235,8 +235,7 @@
                         <div class="stat-rank">#${rank}</div>
                         <div class="stat-name">${player.name}</div>
                         <div class="stat-wins">
-                            <div class="stat-total">${player.totalWins} Wins</div>
-                            <div class="stat-breakdown">Single: ${player.singleWins}W ${player.singleLosses}L | Team: ${player.teamWins}W ${player.teamLosses}L</div>
+                            <div class="stat-total">${player.rating} Points</div>
                         </div>
                     `;
                     container.appendChild(statItem);
@@ -269,7 +268,19 @@
                 });
 
                 const resultSingle = await responseSingle.json();
-                document.getElementById("statusSingleGame").innerText = resultSingle.message;
+
+                // Display rating changes if available
+                if (resultSingle.ratings) {
+                    const winnerChange = resultSingle.ratings.winner.change;
+                    const loserChange = resultSingle.ratings.loser.change;
+                    const winnerSign = winnerChange >= 0 ? '+' : '';
+                    const loserSign = loserChange >= 0 ? '+' : '';
+
+                    document.getElementById("statusSingleGame").innerText =
+                        `${resultSingle.message} | ${resultSingle.ratings.winner.name}: ${winnerSign}${winnerChange} (${resultSingle.ratings.winner.newRating}) | ${resultSingle.ratings.loser.name}: ${loserSign}${loserChange} (${resultSingle.ratings.loser.newRating})`;
+                } else {
+                    document.getElementById("statusSingleGame").innerText = resultSingle.message;
+                }
 
                 // Clear fields after successful save
                 inputBoxWinner.value = "";
@@ -306,7 +317,22 @@
                 });
 
                 const resultTeam = await responseTeam.json();
-                document.getElementById("statusTeamGame").innerText = resultTeam.message;
+
+                // Display rating changes if available
+                if (resultTeam.ratings) {
+                    const r = resultTeam.ratings;
+                    const changes = [
+                        `${r.winnerAttack.name}: ${r.winnerAttack.change >= 0 ? '+' : ''}${r.winnerAttack.change}`,
+                        `${r.winnerDefense.name}: ${r.winnerDefense.change >= 0 ? '+' : ''}${r.winnerDefense.change}`,
+                        `${r.loserAttack.name}: ${r.loserAttack.change >= 0 ? '+' : ''}${r.loserAttack.change}`,
+                        `${r.loserDefense.name}: ${r.loserDefense.change >= 0 ? '+' : ''}${r.loserDefense.change}`
+                    ].join(' | ');
+
+                    document.getElementById("statusTeamGame").innerText =
+                        `${resultTeam.message} | ${changes}`;
+                } else {
+                    document.getElementById("statusTeamGame").innerText = resultTeam.message;
+                }
 
                 // Clear fields after successful save
                 inputBoxWinnerAttack.value = "";
