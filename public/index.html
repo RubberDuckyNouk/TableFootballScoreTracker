@@ -352,7 +352,10 @@
 
                     statItem.innerHTML = `
                         <div class="stat-rank">#${rank}</div>
-                        <div class="stat-name">${player.name}</div>
+                        <div class="stat-name">
+                            ${player.name}
+                            ${rank === 1 ? ' 🏆 🥔 <span style="font-size: 0.8rem; color: #666;">top potato</span>' : ''}
+                        </div>
                         <div class="stat-wins">
                             <div class="stat-total">${player.rating} Points</div>
                         </div>
