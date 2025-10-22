@@ -24,9 +24,15 @@
         <h2>Single Game</h2>
         <h3>Winner vs Loser</h3>
         <div class="input-container">
-            <input type="text" id="inputBoxWinner" class="win" placeholder="Winner" list="playersList">
+            <div class="player-input-wrapper">
+                <input type="text" id="inputBoxWinner" class="win player-input" placeholder="Winner" autocomplete="off">
+                <div class="player-dropdown" id="dropdown-inputBoxWinner"></div>
+            </div>
             <span class="vs">vs</span>
-            <input type="text" id="inputBoxLoser" class="lose" placeholder="Loser" list="playersList">
+            <div class="player-input-wrapper">
+                <input type="text" id="inputBoxLoser" class="lose player-input" placeholder="Loser" autocomplete="off">
+                <div class="player-dropdown" id="dropdown-inputBoxLoser"></div>
+            </div>
         </div>
         <button onclick="saveInputSingle()">Save Game</button>
         <p id="statusSingleGame"></p>
@@ -38,13 +44,25 @@
         <h3>Winning Team vs Losing Team</h3>
         <div class="input-container">
             <div class="team-group winning-team">
-                <input type="text" id="inputBoxWinnerAttack" class="win" placeholder="Attacker" list="playersList">
-                <input type="text" id="inputBoxWinnerDefense" class="win" placeholder="Defender" list="playersList">
+                <div class="player-input-wrapper">
+                    <input type="text" id="inputBoxWinnerAttack" class="win player-input" placeholder="Attacker" autocomplete="off">
+                    <div class="player-dropdown" id="dropdown-inputBoxWinnerAttack"></div>
+                </div>
+                <div class="player-input-wrapper">
+                    <input type="text" id="inputBoxWinnerDefense" class="win player-input" placeholder="Defender" autocomplete="off">
+                    <div class="player-dropdown" id="dropdown-inputBoxWinnerDefense"></div>
+                </div>
             </div>
             <span class="vs">vs</span>
             <div class="team-group losing-team">
-                <input type="text" id="inputBoxLoserAttack" class="lose" placeholder="Attacker" list="playersList">
-                <input type="text" id="inputBoxLoserDefense" class="lose" placeholder="Defender" list="playersList">
+                <div class="player-input-wrapper">
+                    <input type="text" id="inputBoxLoserAttack" class="lose player-input" placeholder="Attacker" autocomplete="off">
+                    <div class="player-dropdown" id="dropdown-inputBoxLoserAttack"></div>
+                </div>
+                <div class="player-input-wrapper">
+                    <input type="text" id="inputBoxLoserDefense" class="lose player-input" placeholder="Defender" autocomplete="off">
+                    <div class="player-dropdown" id="dropdown-inputBoxLoserDefense"></div>
+                </div>
             </div>
         </div>
         <button onclick="saveInputTeam()">Save Game</button>
@@ -75,11 +93,6 @@
     </section>
 
 
-<!-- Player datalist for autocomplete -->
-    <datalist id="playersList">
-        <!-- Populated dynamically via JavaScript -->
-    </datalist>
-
 <!-- front end JS -->
     <script>
     // Define API_BASE once, depending on hostname
@@ -87,30 +100,119 @@
         ? 'http://localhost:3000'   //for local testing
         : 'https://tablefootballscoretracker.onrender.com';  // for prod
 
+        // Global player list
+        let allPlayers = [];
+
         // Load players on page load
         async function loadPlayers() {
             try {
                 const response = await fetch(`${API_BASE}/players`);
                 if (!response.ok) throw new Error('Failed to fetch players');
 
-                const players = await response.json();
-                const datalist = document.getElementById('playersList');
-                datalist.innerHTML = ''; // Clear existing options
-
-                // Populate datalist with player names
-                players.forEach(player => {
-                    const option = document.createElement('option');
-                    option.value = player;
-                    datalist.appendChild(option);
-                });
+                allPlayers = await response.json();
             } catch (error) {
                 console.error('Error loading players:', error);
-                // Silently fail - user can still type names manually
+                allPlayers = [];
             }
         }
 
-        // Load players when page loads
-        window.addEventListener('DOMContentLoaded', loadPlayers);
+        // Initialize player dropdown for an input
+        function initPlayerDropdown(inputId) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(`dropdown-${inputId}`);
+
+            if (!input || !dropdown) return;
+
+            // Show dropdown on focus
+            input.addEventListener('focus', () => {
+                updateDropdown(input, dropdown);
+                dropdown.style.display = 'block';
+            });
+
+            // Update dropdown as user types
+            input.addEventListener('input', () => {
+                updateDropdown(input, dropdown);
+            });
+
+            // Hide dropdown on blur (with delay to allow clicking)
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    dropdown.style.display = 'none';
+                }, 200);
+            });
+        }
+
+        // Update dropdown with filtered players
+        function updateDropdown(input, dropdown) {
+            const searchTerm = input.value.toLowerCase().trim();
+            dropdown.innerHTML = '';
+
+            if (searchTerm === '') {
+                // Show all players when input is empty
+                allPlayers.forEach(player => {
+                    const item = createDropdownItem(player, input, dropdown, false);
+                    dropdown.appendChild(item);
+                });
+            } else {
+                // Filter players by search term
+                const filtered = allPlayers.filter(player =>
+                    player.toLowerCase().includes(searchTerm)
+                );
+
+                filtered.forEach(player => {
+                    const item = createDropdownItem(player, input, dropdown, false);
+                    dropdown.appendChild(item);
+                });
+
+                // Add "Add new player" option if no exact match
+                const exactMatch = allPlayers.some(player =>
+                    player.toLowerCase() === searchTerm
+                );
+
+                if (!exactMatch && searchTerm.length > 0) {
+                    const capitalizedName = searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1);
+                    const addNewItem = createDropdownItem(capitalizedName, input, dropdown, true);
+                    dropdown.appendChild(addNewItem);
+                }
+            }
+        }
+
+        // Create dropdown item
+        function createDropdownItem(playerName, input, dropdown, isNewPlayer) {
+            const item = document.createElement('div');
+            item.className = isNewPlayer ? 'dropdown-item add-new' : 'dropdown-item';
+
+            if (isNewPlayer) {
+                item.innerHTML = `<span class="add-new-icon">+</span> Add new player: <strong>${playerName}</strong>`;
+            } else {
+                item.textContent = playerName;
+            }
+
+            item.addEventListener('click', () => {
+                input.value = playerName;
+                dropdown.style.display = 'none';
+
+                // Add to allPlayers if new
+                if (isNewPlayer && !allPlayers.includes(playerName)) {
+                    allPlayers.push(playerName);
+                }
+            });
+
+            return item;
+        }
+
+        // Load players and initialize dropdowns when page loads
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadPlayers();
+
+            // Initialize all player input dropdowns
+            initPlayerDropdown('inputBoxWinner');
+            initPlayerDropdown('inputBoxLoser');
+            initPlayerDropdown('inputBoxWinnerAttack');
+            initPlayerDropdown('inputBoxWinnerDefense');
+            initPlayerDropdown('inputBoxLoserAttack');
+            initPlayerDropdown('inputBoxLoserDefense');
+        });
 
         // Toggle between game modes
         function showSingleGame() {
