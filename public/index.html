@@ -66,6 +66,12 @@
 
         <!-- Rankings list -->
         <div id="statsContainer" class="stats-container"></div>
+
+        <!-- Recent Games -->
+        <h2 style="margin-top: 3rem;">Recent Games</h2>
+        <div id="recentGamesLoading" class="stats-loading">Loading recent games...</div>
+        <div id="recentGamesError" class="stats-error" style="display: none;"></div>
+        <div id="recentGamesContainer" class="recent-games-container"></div>
     </section>
 
 
@@ -136,6 +142,7 @@
             toggleBtns[1].classList.remove('active');
             toggleBtns[2].classList.add('active');
             loadStatistics();
+            loadRecentGames();
         }
 
         let statsChart = null; // Keep reference to chart
@@ -233,24 +240,11 @@
                     const statItem = document.createElement('div');
                     statItem.className = `stat-item ${rankClass}`;
 
-                    // Format rating history with +/- signs
-                    let historyHtml = '';
-                    if (player.ratingHistory && player.ratingHistory.length > 0) {
-                        const historyText = player.ratingHistory
-                            .map(change => {
-                                const sign = change >= 0 ? '+' : '';
-                                return `${sign}${change}`;
-                            })
-                            .join(', ');
-                        historyHtml = `<div class="stat-history">Last 5: ${historyText}</div>`;
-                    }
-
                     statItem.innerHTML = `
                         <div class="stat-rank">#${rank}</div>
                         <div class="stat-name">${player.name}</div>
                         <div class="stat-wins">
                             <div class="stat-total">${player.rating} Points</div>
-                            ${historyHtml}
                         </div>
                     `;
                     container.appendChild(statItem);
@@ -260,6 +254,107 @@
                 loading.style.display = 'none';
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = 'Failed to load statistics. Please try again.';
+            }
+        }
+
+        async function loadRecentGames() {
+            const container = document.getElementById('recentGamesContainer');
+            const loading = document.getElementById('recentGamesLoading');
+            const errorDiv = document.getElementById('recentGamesError');
+
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE}/recentGames?limit=10`);
+                if (!response.ok) throw new Error('Failed to fetch recent games');
+
+                const games = await response.json();
+                loading.style.display = 'none';
+
+                if (games.length === 0) {
+                    container.innerHTML = '<div class="no-stats"><p>No games with ratings recorded yet!</p></div>';
+                    return;
+                }
+
+                games.forEach(game => {
+                    const gameItem = document.createElement('div');
+                    gameItem.className = 'game-item';
+
+                    const date = new Date(game.date);
+                    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    if (game.type === 'single') {
+                        const winner = game.players[0];
+                        const loser = game.players[1];
+                        const winnerSign = winner.change >= 0 ? '+' : '';
+                        const loserSign = loser.change >= 0 ? '+' : '';
+
+                        gameItem.innerHTML = `
+                            <div class="game-header">
+                                <span class="game-type">Single Game</span>
+                                <span class="game-date">${dateStr}</span>
+                            </div>
+                            <div class="game-players">
+                                <div class="game-player winner">
+                                    <span class="player-name">${winner.name}</span>
+                                    <span class="player-change">${winnerSign}${winner.change}</span>
+                                </div>
+                                <span class="vs-small">vs</span>
+                                <div class="game-player loser">
+                                    <span class="player-name">${loser.name}</span>
+                                    <span class="player-change">${loserSign}${loser.change}</span>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        const winners = game.players.filter(p => p.result === 'won');
+                        const losers = game.players.filter(p => p.result === 'lost');
+
+                        const winnerAttack = winners.find(p => p.role === 'attack');
+                        const winnerDefense = winners.find(p => p.role === 'defense');
+                        const loserAttack = losers.find(p => p.role === 'attack');
+                        const loserDefense = losers.find(p => p.role === 'defense');
+
+                        gameItem.innerHTML = `
+                            <div class="game-header">
+                                <span class="game-type">Team Game</span>
+                                <span class="game-date">${dateStr}</span>
+                            </div>
+                            <div class="game-players team-game">
+                                <div class="team-side winning-side">
+                                    <div class="game-player winner">
+                                        <span class="player-name">${winnerAttack.name} (A)</span>
+                                        <span class="player-change">${winnerAttack.change >= 0 ? '+' : ''}${winnerAttack.change}</span>
+                                    </div>
+                                    <div class="game-player winner">
+                                        <span class="player-name">${winnerDefense.name} (D)</span>
+                                        <span class="player-change">${winnerDefense.change >= 0 ? '+' : ''}${winnerDefense.change}</span>
+                                    </div>
+                                </div>
+                                <span class="vs-small">vs</span>
+                                <div class="team-side losing-side">
+                                    <div class="game-player loser">
+                                        <span class="player-name">${loserAttack.name} (A)</span>
+                                        <span class="player-change">${loserAttack.change >= 0 ? '+' : ''}${loserAttack.change}</span>
+                                    </div>
+                                    <div class="game-player loser">
+                                        <span class="player-name">${loserDefense.name} (D)</span>
+                                        <span class="player-change">${loserDefense.change >= 0 ? '+' : ''}${loserDefense.change}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    container.appendChild(gameItem);
+                });
+            } catch (error) {
+                console.error('Error loading recent games:', error);
+                loading.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Failed to load recent games. Please try again.';
             }
         }
 

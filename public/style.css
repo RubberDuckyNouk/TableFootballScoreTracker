@@ -350,6 +350,103 @@ span.vs {
     margin: 0.5rem 0;
 }
 
+/* Recent Games Styles */
+.recent-games-container {
+    width: 100%;
+    max-width: 700px;
+    margin-top: 1rem;
+}
+
+.game-item {
+    background: #f8f8f8;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #2e7832;
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.game-type {
+    font-weight: 700;
+    color: #2e7832;
+    font-size: 0.9rem;
+}
+
+.game-date {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.game-players {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 1rem;
+}
+
+.game-players.team-game {
+    justify-content: space-between;
+}
+
+.team-side {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.game-player {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    min-width: 150px;
+}
+
+.game-player.winner {
+    background-color: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.game-player.loser {
+    background-color: rgba(244, 67, 54, 0.1);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.player-name {
+    font-weight: 600;
+    color: #333;
+    text-transform: capitalize;
+}
+
+.player-change {
+    font-weight: 700;
+    font-size: 1rem;
+    margin-left: 0.75rem;
+}
+
+.game-player.winner .player-change {
+    color: #2e7832;
+}
+
+.game-player.loser .player-change {
+    color: #971717;
+}
+
+.vs-small {
+    font-weight: 700;
+    color: #666;
+    font-size: 1rem;
+}
+
 /* Mobile-specific button optimizations */
 @media (max-width: 768px) {
     .toggle-container {
@@ -376,6 +473,35 @@ span.vs {
 
     .stat-item {
         padding: 0.875rem 1rem;
+    }
+
+    /* Recent games mobile styles */
+    .game-item {
+        padding: 0.75rem;
+    }
+
+    .game-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .game-players {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .team-side {
+        width: 100%;
+    }
+
+    .game-player {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .vs-small {
+        margin: 0.25rem 0;
     }
 
     .stat-rank {

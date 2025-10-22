@@ -106,47 +106,6 @@ async function updatePlayerRating(playerId, newRating, gamesPlayedIncrement = 1)
     );
 }
 
-/**
- * Get last 5 rating changes for a player
- * @param {string} playerName - Player name (case-insensitive)
- * @returns {Promise<Array<number>>} Array of rating changes
- */
-async function getLastFiveRatingChanges(playerName) {
-    const nameLower = playerName.toLowerCase();
-
-    // Query to get all games with rating changes for this player
-    const query = `
-        SELECT date, rating_change FROM (
-            SELECT date,
-                   CASE
-                       WHEN LOWER(winner) = $1 THEN winner_rating_after - winner_rating_before
-                       WHEN LOWER(loser) = $1 THEN loser_rating_after - loser_rating_before
-                   END as rating_change
-            FROM single_game_results
-            WHERE LOWER(winner) = $1 OR LOWER(loser) = $1
-
-            UNION ALL
-
-            SELECT date,
-                   CASE
-                       WHEN LOWER(winner_attack) = $1 THEN winner_attack_rating_after - winner_attack_rating_before
-                       WHEN LOWER(winner_defense) = $1 THEN winner_defense_rating_after - winner_defense_rating_before
-                       WHEN LOWER(loser_attack) = $1 THEN loser_attack_rating_after - loser_attack_rating_before
-                       WHEN LOWER(loser_defense) = $1 THEN loser_defense_rating_after - loser_defense_rating_before
-                   END as rating_change
-            FROM team_game_results
-            WHERE LOWER(winner_attack) = $1 OR LOWER(winner_defense) = $1
-               OR LOWER(loser_attack) = $1 OR LOWER(loser_defense) = $1
-        ) all_games
-        WHERE rating_change IS NOT NULL
-        ORDER BY date DESC
-        LIMIT 5
-    `;
-
-    const result = await pool.query(query, [nameLower]);
-    return result.rows.map(row => row.rating_change);
-}
-
 // Serve static files (CSS, JS, images)
 app.use(express.static(__dirname));
 //translates data input
@@ -505,21 +464,154 @@ app.get("/stats", async (req, res) => {
       }))
       .sort((a, b) => b.rating - a.rating); // Sort by rating instead of wins
 
-    // Fetch last 5 rating changes for each player
-    const statsWithHistory = await Promise.all(
-      statsArray.map(async (player) => {
-        const ratingHistory = await getLastFiveRatingChanges(player.name);
-        return {
-          ...player,
-          ratingHistory
-        };
-      })
-    );
-
-    res.json(statsWithHistory);
+    res.json(statsArray);
   } catch (err) {
     console.error("DB query error:", err);
     res.status(500).json({ error: "Failed to fetch statistics" });
+  }
+});
+
+// Get recent games with rating changes
+app.get("/recentGames", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+
+    // Get recent single games
+    const singleGamesQuery = `
+      SELECT
+        'single' as game_type,
+        date,
+        winner,
+        loser,
+        NULL as winner_attack,
+        NULL as winner_defense,
+        NULL as loser_attack,
+        NULL as loser_defense,
+        winner_rating_before,
+        winner_rating_after,
+        loser_rating_before,
+        loser_rating_after,
+        NULL as winner_attack_rating_before,
+        NULL as winner_attack_rating_after,
+        NULL as winner_defense_rating_before,
+        NULL as winner_defense_rating_after,
+        NULL as loser_attack_rating_before,
+        NULL as loser_attack_rating_after,
+        NULL as loser_defense_rating_before,
+        NULL as loser_defense_rating_after
+      FROM single_game_results
+      WHERE winner_rating_after IS NOT NULL
+    `;
+
+    // Get recent team games
+    const teamGamesQuery = `
+      SELECT
+        'team' as game_type,
+        date,
+        NULL as winner,
+        NULL as loser,
+        winner_attack,
+        winner_defense,
+        loser_attack,
+        loser_defense,
+        NULL as winner_rating_before,
+        NULL as winner_rating_after,
+        NULL as loser_rating_before,
+        NULL as loser_rating_after,
+        winner_attack_rating_before,
+        winner_attack_rating_after,
+        winner_defense_rating_before,
+        winner_defense_rating_after,
+        loser_attack_rating_before,
+        loser_attack_rating_after,
+        loser_defense_rating_before,
+        loser_defense_rating_after
+      FROM team_game_results
+      WHERE winner_attack_rating_after IS NOT NULL
+    `;
+
+    // Combine and order by date
+    const combinedQuery = `
+      SELECT * FROM (
+        ${singleGamesQuery}
+        UNION ALL
+        ${teamGamesQuery}
+      ) all_games
+      ORDER BY date DESC
+      LIMIT $1
+    `;
+
+    const result = await pool.query(combinedQuery, [limit]);
+
+    // Format the games for display
+    const games = result.rows.map(game => {
+      if (game.game_type === 'single') {
+        return {
+          type: 'single',
+          date: game.date,
+          players: [
+            {
+              name: game.winner,
+              result: 'won',
+              ratingBefore: game.winner_rating_before,
+              ratingAfter: game.winner_rating_after,
+              change: game.winner_rating_after - game.winner_rating_before
+            },
+            {
+              name: game.loser,
+              result: 'lost',
+              ratingBefore: game.loser_rating_before,
+              ratingAfter: game.loser_rating_after,
+              change: game.loser_rating_after - game.loser_rating_before
+            }
+          ]
+        };
+      } else {
+        return {
+          type: 'team',
+          date: game.date,
+          players: [
+            {
+              name: game.winner_attack,
+              role: 'attack',
+              result: 'won',
+              ratingBefore: game.winner_attack_rating_before,
+              ratingAfter: game.winner_attack_rating_after,
+              change: game.winner_attack_rating_after - game.winner_attack_rating_before
+            },
+            {
+              name: game.winner_defense,
+              role: 'defense',
+              result: 'won',
+              ratingBefore: game.winner_defense_rating_before,
+              ratingAfter: game.winner_defense_rating_after,
+              change: game.winner_defense_rating_after - game.winner_defense_rating_before
+            },
+            {
+              name: game.loser_attack,
+              role: 'attack',
+              result: 'lost',
+              ratingBefore: game.loser_attack_rating_before,
+              ratingAfter: game.loser_attack_rating_after,
+              change: game.loser_attack_rating_after - game.loser_attack_rating_before
+            },
+            {
+              name: game.loser_defense,
+              role: 'defense',
+              result: 'lost',
+              ratingBefore: game.loser_defense_rating_before,
+              ratingAfter: game.loser_defense_rating_after,
+              change: game.loser_defense_rating_after - game.loser_defense_rating_before
+            }
+          ]
+        };
+      }
+    });
+
+    res.json(games);
+  } catch (err) {
+    console.error("DB query error:", err);
+    res.status(500).json({ error: "Failed to fetch recent games" });
   }
 });
 
