@@ -340,6 +340,41 @@ span.vs {
     color: #666;
 }
 
+/* Hidden rankings (collapsed by default) */
+.stat-item.hidden-rank {
+    display: none;
+}
+
+.stat-item.hidden-rank.visible {
+    display: flex;
+}
+
+/* Toggle rankings button */
+.toggle-rankings-btn {
+    width: 100%;
+    max-width: 500px;
+    margin-top: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background-color: #f8f8f8;
+    color: #2e7832;
+    border: 2px solid #2e7832;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-rankings-btn:hover {
+    background-color: #2e7832;
+    color: white;
+}
+
+.toggle-rankings-btn.expanded {
+    background-color: #2e7832;
+    color: white;
+}
+
 .no-stats {
     text-align: center;
     padding: 3rem 1rem;

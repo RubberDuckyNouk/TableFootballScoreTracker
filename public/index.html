@@ -237,8 +237,9 @@
                 stats.forEach((player, index) => {
                     const rank = index + 1;
                     const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                    const hiddenClass = rank > 3 ? 'hidden-rank' : '';
                     const statItem = document.createElement('div');
-                    statItem.className = `stat-item ${rankClass}`;
+                    statItem.className = `stat-item ${rankClass} ${hiddenClass}`;
 
                     statItem.innerHTML = `
                         <div class="stat-rank">#${rank}</div>
@@ -249,6 +250,28 @@
                     `;
                     container.appendChild(statItem);
                 });
+
+                // Add expand/collapse button if there are more than 3 players
+                if (stats.length > 3) {
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.className = 'toggle-rankings-btn';
+                    toggleBtn.textContent = `Show ${stats.length - 3} More Players`;
+                    toggleBtn.onclick = () => {
+                        const hiddenRanks = document.querySelectorAll('.stat-item.hidden-rank');
+                        const isExpanded = toggleBtn.classList.contains('expanded');
+
+                        if (isExpanded) {
+                            hiddenRanks.forEach(item => item.classList.remove('visible'));
+                            toggleBtn.textContent = `Show ${stats.length - 3} More Players`;
+                            toggleBtn.classList.remove('expanded');
+                        } else {
+                            hiddenRanks.forEach(item => item.classList.add('visible'));
+                            toggleBtn.textContent = 'Show Less';
+                            toggleBtn.classList.add('expanded');
+                        }
+                    };
+                    container.appendChild(toggleBtn);
+                }
             } catch (error) {
                 console.error('Error loading statistics:', error);
                 loading.style.display = 'none';
