@@ -256,6 +256,16 @@ span.vs {
     color: #971717;
 }
 
+.stats-chart-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto 2rem auto;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
 .stats-container {
     width: 100%;
     max-width: 500px;
@@ -352,6 +362,11 @@ span.vs {
         padding: 0.875rem 0.5rem;
         font-size: 0.85rem;
         min-width: auto;
+    }
+
+    /* Hide chart on mobile */
+    .stats-chart-container {
+        display: none;
     }
 
     .stat-item {

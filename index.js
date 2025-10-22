@@ -90,6 +90,13 @@ app.get("/stats", async (req, res) => {
       GROUP BY LOWER(winner)
     `;
 
+    // Get single game losses (case-insensitive)
+    const singleLossesQuery = `
+      SELECT LOWER(loser) as player_name, COUNT(*) as losses
+      FROM single_game_results
+      GROUP BY LOWER(loser)
+    `;
+
     // Get team game wins (case-insensitive, counting both attack and defense positions)
     const teamWinsQuery = `
       SELECT player_name, SUM(wins) as wins FROM (
@@ -104,30 +111,66 @@ app.get("/stats", async (req, res) => {
       GROUP BY player_name
     `;
 
-    const singleWins = await pool.query(singleWinsQuery);
-    const teamWins = await pool.query(teamWinsQuery);
+    // Get team game losses (case-insensitive, counting both attack and defense positions)
+    const teamLossesQuery = `
+      SELECT player_name, SUM(losses) as losses FROM (
+        SELECT LOWER(loser_attack) as player_name, COUNT(*) as losses
+        FROM team_game_results
+        GROUP BY LOWER(loser_attack)
+        UNION ALL
+        SELECT LOWER(loser_defense) as player_name, COUNT(*) as losses
+        FROM team_game_results
+        GROUP BY LOWER(loser_defense)
+      ) combined
+      GROUP BY player_name
+    `;
 
-    // Combine results and aggregate wins
+    const singleWins = await pool.query(singleWinsQuery);
+    const singleLosses = await pool.query(singleLossesQuery);
+    const teamWins = await pool.query(teamWinsQuery);
+    const teamLosses = await pool.query(teamLossesQuery);
+
+    // Combine results and aggregate wins/losses
     const playerStats = {};
 
     // Add single game wins
     singleWins.rows.forEach(row => {
       const name = row.player_name;
       if (!playerStats[name]) {
-        playerStats[name] = { singleWins: 0, teamWins: 0, totalWins: 0 };
+        playerStats[name] = { singleWins: 0, teamWins: 0, totalWins: 0, singleLosses: 0, teamLosses: 0, totalLosses: 0 };
       }
       playerStats[name].singleWins = parseInt(row.wins);
       playerStats[name].totalWins += parseInt(row.wins);
+    });
+
+    // Add single game losses
+    singleLosses.rows.forEach(row => {
+      const name = row.player_name;
+      if (!playerStats[name]) {
+        playerStats[name] = { singleWins: 0, teamWins: 0, totalWins: 0, singleLosses: 0, teamLosses: 0, totalLosses: 0 };
+      }
+      playerStats[name].singleLosses = parseInt(row.losses);
+      playerStats[name].totalLosses += parseInt(row.losses);
     });
 
     // Add team game wins
     teamWins.rows.forEach(row => {
       const name = row.player_name;
       if (!playerStats[name]) {
-        playerStats[name] = { singleWins: 0, teamWins: 0, totalWins: 0 };
+        playerStats[name] = { singleWins: 0, teamWins: 0, totalWins: 0, singleLosses: 0, teamLosses: 0, totalLosses: 0 };
       }
       playerStats[name].teamWins = parseInt(row.wins);
       playerStats[name].totalWins += parseInt(row.wins);
+    });
+
+    // Add team game losses
+    teamLosses.rows.forEach(row => {
+      const name = row.player_name;
+      if (!playerStats[name]) {
+        playerStats[name] = { singleWins: 0, teamWins: 0, totalWins: 0, singleLosses: 0, teamLosses: 0, totalLosses: 0 };
+      }
+      playerStats[name].teamLosses = parseInt(row.losses);
+      playerStats[name].totalLosses += parseInt(row.losses);
     });
 
     // Convert to array and sort by total wins
