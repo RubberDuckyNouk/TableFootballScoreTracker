@@ -8,6 +8,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body >
     <!-- header -->
@@ -157,7 +160,7 @@
             } else {
                 // Filter players by search term
                 const filtered = allPlayers.filter(player =>
-                    player.toLowerCase().includes(searchTerm)
+                    player.name.toLowerCase().includes(searchTerm)
                 );
 
                 filtered.forEach(player => {
@@ -167,35 +170,41 @@
 
                 // Add "Add new player" option if no exact match
                 const exactMatch = allPlayers.some(player =>
-                    player.toLowerCase() === searchTerm
+                    player.name.toLowerCase() === searchTerm
                 );
 
                 if (!exactMatch && searchTerm.length > 0) {
                     const capitalizedName = searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1);
-                    const addNewItem = createDropdownItem(capitalizedName, input, dropdown, true);
+                    const addNewItem = createDropdownItem({ name: capitalizedName }, input, dropdown, true);
                     dropdown.appendChild(addNewItem);
                 }
             }
         }
 
         // Create dropdown item
-        function createDropdownItem(playerName, input, dropdown, isNewPlayer) {
+        function createDropdownItem(player, input, dropdown, isNewPlayer) {
             const item = document.createElement('div');
             item.className = isNewPlayer ? 'dropdown-item add-new' : 'dropdown-item';
 
             if (isNewPlayer) {
-                item.innerHTML = `<span class="add-new-icon">+</span> Add new player: <strong>${playerName}</strong>`;
+                item.innerHTML = `<span class="add-new-icon">+</span> Add new player: <strong>${player.name}</strong>`;
             } else {
-                item.textContent = playerName;
+                item.innerHTML = `
+                    <span style="font-weight: 600;">${player.name}</span>
+                    <span style="font-size: 0.85rem; color: #666; margin-left: auto;">#${player.rank} - ${player.rating} pts</span>
+                `;
+                item.style.display = 'flex';
+                item.style.justifyContent = 'space-between';
+                item.style.alignItems = 'center';
             }
 
             item.addEventListener('click', () => {
-                input.value = playerName;
+                input.value = player.name;
                 dropdown.style.display = 'none';
 
                 // Add to allPlayers if new
-                if (isNewPlayer && !allPlayers.includes(playerName)) {
-                    allPlayers.push(playerName);
+                if (isNewPlayer && !allPlayers.some(p => p.name.toLowerCase() === player.name.toLowerCase())) {
+                    allPlayers.push(player);
                 }
             });
 
@@ -287,15 +296,15 @@
                             {
                                 label: 'Wins',
                                 data: stats.map(p => p.totalWins),
-                                backgroundColor: '#4CAF50',
-                                borderColor: '#2e7832',
+                                backgroundColor: '#96C341',
+                                borderColor: '#729c28',
                                 borderWidth: 1
                             },
                             {
                                 label: 'Losses',
                                 data: stats.map(p => p.totalLosses),
-                                backgroundColor: '#f44336',
-                                borderColor: '#971717',
+                                backgroundColor: '#5E2158',
+                                borderColor: '#3d1539',
                                 borderWidth: 1
                             }
                         ]
