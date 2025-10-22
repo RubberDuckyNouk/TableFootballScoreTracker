@@ -1,7 +1,10 @@
 /* Global Styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
     background-color: #f4f4f9;
+    background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(46, 120, 50, 0.03) 35px, rgba(46, 120, 50, 0.03) 70px),
+        repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(46, 120, 50, 0.02) 35px, rgba(46, 120, 50, 0.02) 70px);
     margin: 0;
     padding: 2rem;
     display: flex;
@@ -307,8 +310,17 @@ p {
 
 span.vs {
     font-weight: 800;
-    font-size: 1.3rem;
-    color: #333;
+    font-size: 1.6rem;
+    font-style: italic;
+    background: linear-gradient(135deg, #1b4d20 0%, #2e7832 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 0.05rem;
+    line-height: 1;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
 }
 
 /* Statistics Styles */

@@ -316,15 +316,18 @@ app.post("/saveTeam", async (req, res) => {
 //get all unique player names
 app.get("/players", async (req, res) => {
   try {
-    // Get all players from players table, ordered by name
+    // Get all players from players table with their rankings
     const playersQuery = `
-      SELECT name
+      SELECT
+        name,
+        rating,
+        RANK() OVER (ORDER BY rating DESC) as rank
       FROM players
       ORDER BY name
     `;
 
     const result = await pool.query(playersQuery);
-    const players = result.rows.map(row => row.name);
+    const players = result.rows;
 
     res.json(players);
   } catch (err) {
