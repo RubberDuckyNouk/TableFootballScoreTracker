@@ -479,6 +479,7 @@ app.get("/recentGames", async (req, res) => {
     // Get recent single games
     const singleGamesQuery = `
       SELECT
+        id,
         'single' as game_type,
         date,
         winner,
@@ -506,6 +507,7 @@ app.get("/recentGames", async (req, res) => {
     // Get recent team games
     const teamGamesQuery = `
       SELECT
+        id,
         'team' as game_type,
         date,
         NULL as winner,
@@ -547,6 +549,7 @@ app.get("/recentGames", async (req, res) => {
     const games = result.rows.map(game => {
       if (game.game_type === 'single') {
         return {
+          id: game.id,
           type: 'single',
           date: game.date,
           players: [
@@ -568,6 +571,7 @@ app.get("/recentGames", async (req, res) => {
         };
       } else {
         return {
+          id: game.id,
           type: 'team',
           date: game.date,
           players: [
@@ -612,6 +616,30 @@ app.get("/recentGames", async (req, res) => {
   } catch (err) {
     console.error("DB query error:", err);
     res.status(500).json({ error: "Failed to fetch recent games" });
+  }
+});
+
+// Delete a game
+app.delete("/deleteGame/:type/:id", async (req, res) => {
+  const { type, id } = req.params;
+
+  try {
+    const tableName = type === 'single' ? 'single_game_results' : 'team_game_results';
+
+    // Delete the game
+    const result = await pool.query(
+      `DELETE FROM ${tableName} WHERE id = $1 RETURNING *`,
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+
+    res.json({ message: "Game deleted successfully", game: result.rows[0] });
+  } catch (err) {
+    console.error("Error deleting game:", err);
+    res.status(500).json({ error: "Failed to delete game" });
   }
 });
 

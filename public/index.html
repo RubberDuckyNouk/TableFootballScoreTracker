@@ -316,8 +316,11 @@
 
                         gameItem.innerHTML = `
                             <div class="game-header">
-                                <span class="game-type">Single Game</span>
-                                <span class="game-date">${dateStr}</span>
+                                <div>
+                                    <span class="game-type">Single Game</span>
+                                    <span class="game-date">${dateStr}</span>
+                                </div>
+                                <button class="delete-game-btn" data-game-id="${game.id}" data-game-type="${game.type}">Delete</button>
                             </div>
                             <div class="game-players">
                                 <div class="game-player winner">
@@ -342,8 +345,11 @@
 
                         gameItem.innerHTML = `
                             <div class="game-header">
-                                <span class="game-type">Team Game</span>
-                                <span class="game-date">${dateStr}</span>
+                                <div>
+                                    <span class="game-type">Team Game</span>
+                                    <span class="game-date">${dateStr}</span>
+                                </div>
+                                <button class="delete-game-btn" data-game-id="${game.id}" data-game-type="${game.type}">Delete</button>
                             </div>
                             <div class="game-players team-game">
                                 <div class="team-side winning-side">
@@ -372,6 +378,33 @@
                     }
 
                     container.appendChild(gameItem);
+                });
+
+                // Add event listeners to delete buttons
+                container.querySelectorAll('.delete-game-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const gameId = e.target.dataset.gameId;
+                        const gameType = e.target.dataset.gameType;
+
+                        if (!confirm('Are you sure you want to delete this game? This cannot be undone.')) {
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(`${API_BASE}/deleteGame/${gameType}/${gameId}`, {
+                                method: 'DELETE'
+                            });
+
+                            if (!response.ok) throw new Error('Failed to delete game');
+
+                            // Reload the games list and statistics
+                            loadRecentGames();
+                            loadStatistics();
+                        } catch (error) {
+                            console.error('Error deleting game:', error);
+                            alert('Failed to delete game. Please try again.');
+                        }
+                    });
                 });
             } catch (error) {
                 console.error('Error loading recent games:', error);

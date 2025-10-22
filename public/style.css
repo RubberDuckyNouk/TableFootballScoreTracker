@@ -413,11 +413,33 @@ span.vs {
     font-weight: 700;
     color: #2e7832;
     font-size: 0.9rem;
+    margin-right: 0.75rem;
 }
 
 .game-date {
     font-size: 0.85rem;
     color: #666;
+}
+
+.delete-game-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+    background-color: #fff;
+    color: #971717;
+    border: 1.5px solid #971717;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    min-width: auto;
+    max-width: none;
+    min-height: auto;
+}
+
+.delete-game-btn:hover {
+    background-color: #971717;
+    color: white;
+    transform: none;
 }
 
 .game-players {
