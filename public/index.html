@@ -24,9 +24,9 @@
         <h2>Single Game</h2>
         <h3>Winner vs Loser</h3>
         <div class="input-container">
-            <input type="text" id="inputBoxWinner" class="win" placeholder="Winner">
+            <input type="text" id="inputBoxWinner" class="win" placeholder="Winner" list="playersList">
             <span class="vs">vs</span>
-            <input type="text" id="inputBoxLoser" class="lose" placeholder="Loser">
+            <input type="text" id="inputBoxLoser" class="lose" placeholder="Loser" list="playersList">
         </div>
         <button onclick="saveInputSingle()">Save Game</button>
         <p id="statusSingleGame"></p>
@@ -38,13 +38,13 @@
         <h3>Winning Team vs Losing Team</h3>
         <div class="input-container">
             <div class="team-group winning-team">
-                <input type="text" id="inputBoxWinnerAttack" class="win" placeholder="Attacker">
-                <input type="text" id="inputBoxWinnerDefense" class="win" placeholder="Defender">
+                <input type="text" id="inputBoxWinnerAttack" class="win" placeholder="Attacker" list="playersList">
+                <input type="text" id="inputBoxWinnerDefense" class="win" placeholder="Defender" list="playersList">
             </div>
             <span class="vs">vs</span>
             <div class="team-group losing-team">
-                <input type="text" id="inputBoxLoserAttack" class="lose" placeholder="Attacker">
-                <input type="text" id="inputBoxLoserDefense" class="lose" placeholder="Defender">
+                <input type="text" id="inputBoxLoserAttack" class="lose" placeholder="Attacker" list="playersList">
+                <input type="text" id="inputBoxLoserDefense" class="lose" placeholder="Defender" list="playersList">
             </div>
         </div>
         <button onclick="saveInputTeam()">Save Game</button>
@@ -68,12 +68,42 @@
     </section>
 
 
+<!-- Player datalist for autocomplete -->
+    <datalist id="playersList">
+        <!-- Populated dynamically via JavaScript -->
+    </datalist>
+
 <!-- front end JS -->
     <script>
     // Define API_BASE once, depending on hostname
     const API_BASE = window.location.hostname === 'localhost'
         ? 'http://localhost:3000'   //for local testing
         : 'https://tablefootballscoretracker.onrender.com';  // for prod
+
+        // Load players on page load
+        async function loadPlayers() {
+            try {
+                const response = await fetch(`${API_BASE}/players`);
+                if (!response.ok) throw new Error('Failed to fetch players');
+
+                const players = await response.json();
+                const datalist = document.getElementById('playersList');
+                datalist.innerHTML = ''; // Clear existing options
+
+                // Populate datalist with player names
+                players.forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player;
+                    datalist.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading players:', error);
+                // Silently fail - user can still type names manually
+            }
+        }
+
+        // Load players when page loads
+        window.addEventListener('DOMContentLoaded', loadPlayers);
 
         // Toggle between game modes
         function showSingleGame() {
@@ -244,6 +274,9 @@
                 // Clear fields after successful save
                 inputBoxWinner.value = "";
                 inputBoxLoser.value = "";
+
+                // Reload players list to include any new players
+                loadPlayers();
             } catch (error) {
                 console.error("Error saving single game:", error);
                 alert("Failed to save data. Check server connection.");
@@ -280,6 +313,9 @@
                 inputBoxWinnerDefense.value = "";
                 inputBoxLoserAttack.value = "";
                 inputBoxLoserDefense.value = "";
+
+                // Reload players list to include any new players
+                loadPlayers();
             } catch (error) {
                 console.error("Error saving team game:", error);
                 alert("Failed to save data. Check server connection.");

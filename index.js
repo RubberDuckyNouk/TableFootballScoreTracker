@@ -80,6 +80,40 @@ app.post("/saveTeam", async (req, res) => {
     }
   });
 
+//get all unique player names
+app.get("/players", async (req, res) => {
+  try {
+    // Get all unique player names from both single and team games (case-insensitive)
+    const playersQuery = `
+      SELECT DISTINCT name FROM (
+        SELECT LOWER(winner) as name FROM single_game_results
+        UNION
+        SELECT LOWER(loser) as name FROM single_game_results
+        UNION
+        SELECT LOWER(winner_attack) as name FROM team_game_results
+        UNION
+        SELECT LOWER(winner_defense) as name FROM team_game_results
+        UNION
+        SELECT LOWER(loser_attack) as name FROM team_game_results
+        UNION
+        SELECT LOWER(loser_defense) as name FROM team_game_results
+      ) all_players
+      ORDER BY name
+    `;
+
+    const result = await pool.query(playersQuery);
+    // Capitalize first letter for display
+    const players = result.rows.map(row =>
+      row.name.charAt(0).toUpperCase() + row.name.slice(1)
+    );
+
+    res.json(players);
+  } catch (err) {
+    console.error("DB query error:", err);
+    res.status(500).json({ error: "Failed to fetch players" });
+  }
+});
+
 //get player statistics
 app.get("/stats", async (req, res) => {
   try {
