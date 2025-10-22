@@ -83,4 +83,5 @@ app.post("/saveTeam", async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Hot reload is active - nodemon watching for changes`);
 });

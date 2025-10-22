@@ -9,31 +9,45 @@
 </head>
 <body >
     <!-- header -->
-    <h1 class="m-5">Welcome to the table football score tracker</h1>
+    <h1 class="m-5">Table Football Score Tracker</h1>
+
+    <!-- Game Mode Toggle -->
+    <div class="toggle-container">
+        <button class="toggle-btn active" onclick="showSingleGame()">Single Game</button>
+        <button class="toggle-btn" onclick="showTeamGame()">Team Game</button>
+    </div>
 
     <!-- Single Game -->
-    <h2>Enter player names for single game</h2>
-    <h3>Winning player - Losing player</h3>
-        <div>
-        <input type="text" id="inputBoxWinner" class = "win" placeholder="Enter the name of the winner">
-        <span class="vs">vs</span>
-        <input type="text" id="inputBoxLoser" class = "lose" placeholder="Enter the name of the loser">
+    <section class="game-section" id="singleGameSection">
+        <h2>Single Game</h2>
+        <h3>Winner vs Loser</h3>
+        <div class="input-container">
+            <input type="text" id="inputBoxWinner" class="win" placeholder="Winner">
+            <span class="vs">vs</span>
+            <input type="text" id="inputBoxLoser" class="lose" placeholder="Loser">
         </div>
-    <button onclick="saveInputSingle()">Save</button>
-    <p id="statusSingleGame"></p>
+        <button onclick="saveInputSingle()">Save Game</button>
+        <p id="statusSingleGame"></p>
+    </section>
 
     <!-- Team Game -->
-    <h2>Enter player names for team game</h2>
-    <h3>Winning team - Losing team</h3>
-        <div>
-        <input type="text" id="inputBoxWinnerAttack" class = "win" placeholder="Winning attacker">
-        <input type="text" id="inputBoxWinnerDefense" class = "win" placeholder="Winning defender">
-        <span class="vs">vs</span>
-        <input type="text" id="inputBoxLoserAttack" class = "lose" placeholder="Losing attacker">
-        <input type="text" id="inputBoxLoserDefense" class = "lose" placeholder="Losing defender">
+    <section class="game-section" id="teamGameSection" style="display: none;">
+        <h2>Team Game</h2>
+        <h3>Winning Team vs Losing Team</h3>
+        <div class="input-container">
+            <div class="team-group winning-team">
+                <input type="text" id="inputBoxWinnerAttack" class="win" placeholder="Attacker">
+                <input type="text" id="inputBoxWinnerDefense" class="win" placeholder="Defender">
+            </div>
+            <span class="vs">vs</span>
+            <div class="team-group losing-team">
+                <input type="text" id="inputBoxLoserAttack" class="lose" placeholder="Attacker">
+                <input type="text" id="inputBoxLoserDefense" class="lose" placeholder="Defender">
+            </div>
         </div>
-    <button onclick="saveInputTeam()">Save</button>
-    <p id="statusTeamGame"></p>
+        <button onclick="saveInputTeam()">Save Game</button>
+        <p id="statusTeamGame"></p>
+    </section>
 
 
 <!-- front end JS -->
@@ -42,6 +56,27 @@
     const API_BASE = window.location.hostname === 'localhost'
         ? 'http://localhost:3000'   //for local testing
         : 'https://tablefootballscoretracker.onrender.com';  // for prod
+
+        // Toggle between game modes
+        function showSingleGame() {
+            document.getElementById('singleGameSection').style.display = 'flex';
+            document.getElementById('teamGameSection').style.display = 'none';
+
+            // Update toggle button styles
+            const toggleBtns = document.querySelectorAll('.toggle-btn');
+            toggleBtns[0].classList.add('active');
+            toggleBtns[1].classList.remove('active');
+        }
+
+        function showTeamGame() {
+            document.getElementById('singleGameSection').style.display = 'none';
+            document.getElementById('teamGameSection').style.display = 'flex';
+
+            // Update toggle button styles
+            const toggleBtns = document.querySelectorAll('.toggle-btn');
+            toggleBtns[0].classList.remove('active');
+            toggleBtns[1].classList.add('active');
+        }
 
         //Single game
         async function saveInputSingle() {
