@@ -106,6 +106,47 @@ async function updatePlayerRating(playerId, newRating, gamesPlayedIncrement = 1)
     );
 }
 
+/**
+ * Get last 5 rating changes for a player
+ * @param {string} playerName - Player name (case-insensitive)
+ * @returns {Promise<Array<number>>} Array of rating changes
+ */
+async function getLastFiveRatingChanges(playerName) {
+    const nameLower = playerName.toLowerCase();
+
+    // Query to get all games with rating changes for this player
+    const query = `
+        SELECT date, rating_change FROM (
+            SELECT date,
+                   CASE
+                       WHEN LOWER(winner) = $1 THEN winner_rating_after - winner_rating_before
+                       WHEN LOWER(loser) = $1 THEN loser_rating_after - loser_rating_before
+                   END as rating_change
+            FROM single_game_results
+            WHERE LOWER(winner) = $1 OR LOWER(loser) = $1
+
+            UNION ALL
+
+            SELECT date,
+                   CASE
+                       WHEN LOWER(winner_attack) = $1 THEN winner_attack_rating_after - winner_attack_rating_before
+                       WHEN LOWER(winner_defense) = $1 THEN winner_defense_rating_after - winner_defense_rating_before
+                       WHEN LOWER(loser_attack) = $1 THEN loser_attack_rating_after - loser_attack_rating_before
+                       WHEN LOWER(loser_defense) = $1 THEN loser_defense_rating_after - loser_defense_rating_before
+                   END as rating_change
+            FROM team_game_results
+            WHERE LOWER(winner_attack) = $1 OR LOWER(winner_defense) = $1
+               OR LOWER(loser_attack) = $1 OR LOWER(loser_defense) = $1
+        ) all_games
+        WHERE rating_change IS NOT NULL
+        ORDER BY date DESC
+        LIMIT 5
+    `;
+
+    const result = await pool.query(query, [nameLower]);
+    return result.rows.map(row => row.rating_change);
+}
+
 // Serve static files (CSS, JS, images)
 app.use(express.static(__dirname));
 //translates data input
@@ -464,7 +505,18 @@ app.get("/stats", async (req, res) => {
       }))
       .sort((a, b) => b.rating - a.rating); // Sort by rating instead of wins
 
-    res.json(statsArray);
+    // Fetch last 5 rating changes for each player
+    const statsWithHistory = await Promise.all(
+      statsArray.map(async (player) => {
+        const ratingHistory = await getLastFiveRatingChanges(player.name);
+        return {
+          ...player,
+          ratingHistory
+        };
+      })
+    );
+
+    res.json(statsWithHistory);
   } catch (err) {
     console.error("DB query error:", err);
     res.status(500).json({ error: "Failed to fetch statistics" });

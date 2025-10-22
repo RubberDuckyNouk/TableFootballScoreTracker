@@ -55,6 +55,7 @@
     <section class="game-section" id="statsSection" style="display: none;">
         <h2>Player Rankings</h2>
         <p class="stats-subtitle">Ranked by points</p>
+        <p class="stats-subtitle">See more details on desktop, all data has been reset for new points system.</p>
         <div id="statsLoading" class="stats-loading">Loading statistics...</div>
         <div id="statsError" class="stats-error" style="display: none;"></div>
 
@@ -231,11 +232,25 @@
                     const rankClass = rank <= 3 ? `rank-${rank}` : '';
                     const statItem = document.createElement('div');
                     statItem.className = `stat-item ${rankClass}`;
+
+                    // Format rating history with +/- signs
+                    let historyHtml = '';
+                    if (player.ratingHistory && player.ratingHistory.length > 0) {
+                        const historyText = player.ratingHistory
+                            .map(change => {
+                                const sign = change >= 0 ? '+' : '';
+                                return `${sign}${change}`;
+                            })
+                            .join(', ');
+                        historyHtml = `<div class="stat-history">Last 5: ${historyText}</div>`;
+                    }
+
                     statItem.innerHTML = `
                         <div class="stat-rank">#${rank}</div>
                         <div class="stat-name">${player.name}</div>
                         <div class="stat-wins">
                             <div class="stat-total">${player.rating} Points</div>
+                            ${historyHtml}
                         </div>
                     `;
                     container.appendChild(statItem);

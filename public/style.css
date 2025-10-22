@@ -369,6 +369,11 @@ span.vs {
         display: none;
     }
 
+    /* Hide rating history on mobile */
+    .stat-history {
+        display: none;
+    }
+
     .stat-item {
         padding: 0.875rem 1rem;
     }
