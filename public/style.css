@@ -16,6 +16,7 @@ body {
     color: #5E2158;
     letter-spacing: -0.5px;
     font-weight: 400;
+    overflow-y: auto;
 }
 
 h1 {
@@ -25,6 +26,12 @@ h1 {
     margin: 3rem 0 0.25rem 0;
     font-weight: 700;
     text-transform: uppercase;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+h1:hover {
+    color: #96C341;
+    transform: scale(1.02);
 }
 
 .subtitle {
@@ -62,6 +69,7 @@ h1 {
     margin: 0 0 1.5rem 0;
     line-height: 1.6;
     opacity: 0.95;
+    white-space: pre-line;
 }
 
 .enter-app-btn {
@@ -105,6 +113,48 @@ h1 {
     .enter-app-btn {
         padding: 0.875rem 2.5rem;
         font-size: 1rem;
+    }
+}
+
+/* Release Notes */
+.release-notes {
+    background: linear-gradient(135deg, #5E2158 0%, #4a1a45 100%);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin: 0 0 2rem 0;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(94, 33, 88, 0.3);
+    text-align: center;
+}
+
+.release-notes h2 {
+    color: white;
+    font-size: 1.4rem;
+    margin: 0 0 0.75rem 0;
+    font-weight: 700;
+}
+
+.release-notes p {
+    color: white;
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.5;
+    opacity: 0.95;
+    white-space: pre-line;
+}
+
+@media (max-width: 768px) {
+    .release-notes {
+        padding: 1.25rem;
+    }
+
+    .release-notes h2 {
+        font-size: 1.25rem;
+    }
+
+    .release-notes p {
+        font-size: 0.95rem;
     }
 }
 

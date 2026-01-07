@@ -1,5 +1,10 @@
 {
   "title": "Welcome to Table Football Tracker!",
-  "message": "Track your foosball games and compete for the top spot. Play regularly to maintain your rating - inactive players decay at 20 points per week after 7 days!",
-  "enabled": true
+  "message": "Track your games and compete for the top spot. \n\nPlay regularly to maintain your rating \ninactive players lose points every 7 days!",
+  "enabled": true,
+  "releaseNotes": {
+    "enabled": true,
+    "title": "What's New",
+    "message": "7 jan 2026 \nNew rating system with activity-based decay!\nPlayers must stay active to maintain top rankings."
+  }
 }
