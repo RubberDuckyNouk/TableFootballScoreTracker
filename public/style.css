@@ -16,6 +16,7 @@ body {
     color: #5E2158;
     letter-spacing: -0.5px;
     font-weight: 400;
+    overflow-y: auto;
 }
 
 h1 {
@@ -25,6 +26,12 @@ h1 {
     margin: 3rem 0 0.25rem 0;
     font-weight: 700;
     text-transform: uppercase;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+h1:hover {
+    color: #96C341;
+    transform: scale(1.02);
 }
 
 .subtitle {
@@ -35,6 +42,120 @@ h1 {
     font-weight: 400;
     margin: 0 0 2rem 0;
     font-style: italic;
+}
+
+/* Landing Message */
+.landing-message {
+    background: linear-gradient(135deg, #96C341 0%, #84b032 100%);
+    border-radius: 1rem;
+    padding: 2rem;
+    margin: 0 0 2rem 0;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(150, 195, 65, 0.3);
+    text-align: center;
+}
+
+.landing-message h2 {
+    color: white;
+    font-size: 1.75rem;
+    margin: 0 0 1rem 0;
+    font-weight: 700;
+}
+
+.landing-message p {
+    color: white;
+    font-size: 1.1rem;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.6;
+    opacity: 0.95;
+    white-space: pre-line;
+}
+
+.enter-app-btn {
+    background-color: white;
+    color: #96C341;
+    border: none;
+    padding: 1rem 3rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.enter-app-btn:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.enter-app-btn:active {
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .landing-message {
+        padding: 1.5rem;
+    }
+
+    .landing-message h2 {
+        font-size: 1.5rem;
+    }
+
+    .landing-message p {
+        font-size: 1rem;
+    }
+
+    .enter-app-btn {
+        padding: 0.875rem 2.5rem;
+        font-size: 1rem;
+    }
+}
+
+/* Release Notes */
+.release-notes {
+    background: linear-gradient(135deg, #5E2158 0%, #4a1a45 100%);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    margin: 0 0 2rem 0;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(94, 33, 88, 0.3);
+    text-align: center;
+}
+
+.release-notes h2 {
+    color: white;
+    font-size: 1.4rem;
+    margin: 0 0 0.75rem 0;
+    font-weight: 700;
+}
+
+.release-notes p {
+    color: white;
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.5;
+    opacity: 0.95;
+    white-space: pre-line;
+}
+
+@media (max-width: 768px) {
+    .release-notes {
+        padding: 1.25rem;
+    }
+
+    .release-notes h2 {
+        font-size: 1.25rem;
+    }
+
+    .release-notes p {
+        font-size: 0.95rem;
+    }
 }
 
 /* Toggle Container */

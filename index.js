@@ -156,6 +156,25 @@ app.use(express.json());
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+// Get landing page message
+app.get("/landing-message", (req, res) => {
+  try {
+    const fs = require('fs');
+    const messagePath = path.join(__dirname, 'landing-message.json');
+    const messageData = fs.readFileSync(messagePath, 'utf8');
+    const message = JSON.parse(messageData);
+    res.json(message);
+  } catch (err) {
+    console.error("Error reading landing message:", err);
+    // Return default message if file can't be read
+    res.json({
+      title: "Welcome!",
+      message: "Track your foosball games and compete for glory!",
+      enabled: true
+    });
+  }
+});
  
 //single game data save
 app.post("/saveSingle", async (req, res) => {

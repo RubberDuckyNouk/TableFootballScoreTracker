@@ -14,15 +14,30 @@
 </head>
 <body >
     <!-- header -->
-    <h1>Table Turns</h1>
+    <h1 onclick="goToLanding()" style="cursor: pointer;">Table Turns</h1>
     <p class="subtitle">The competitive table football app</p>
 
-    <!-- Game Mode Toggle -->
-    <div class="toggle-container">
-        <button class="toggle-btn active" onclick="showSingleGame()">Single Game</button>
-        <button class="toggle-btn" onclick="showTeamGame()">Team Game</button>
-        <button class="toggle-btn" onclick="showStats()">Statistics</button>
+    <!-- Landing Message -->
+    <div id="landingMessage" class="landing-message" style="display: none;">
+        <h2 id="landingTitle"></h2>
+        <p id="landingText"></p>
+        <button id="enterAppBtn" class="enter-app-btn" onclick="enterApp()">Go to App</button>
     </div>
+
+    <!-- Release Notes -->
+    <div id="releaseNotes" class="release-notes" style="display: none;">
+        <h2 id="releaseNotesTitle"></h2>
+        <p id="releaseNotesText"></p>
+    </div>
+
+    <!-- Main App Container (hidden initially) -->
+    <div id="appContainer" style="display: none; width: 100%; max-width: 600px;">
+        <!-- Game Mode Toggle -->
+        <div class="toggle-container">
+            <button class="toggle-btn active" onclick="showSingleGame()">Single Game</button>
+            <button class="toggle-btn" onclick="showTeamGame()">Team Game</button>
+            <button class="toggle-btn" onclick="showStats()">Statistics</button>
+        </div>
 
     <!-- Single Game -->
     <section class="game-section" id="singleGameSection">
@@ -96,6 +111,7 @@
         <div id="recentGamesError" class="stats-error" style="display: none;"></div>
         <div id="recentGamesContainer" class="recent-games-container"></div>
     </section>
+    </div> <!-- End of appContainer -->
 
 
 <!-- front end JS -->
@@ -107,6 +123,58 @@
 
         // Global player list
         let allPlayers = [];
+
+        // Load landing message on page load
+        async function loadLandingMessage() {
+            try {
+                const response = await fetch(`${API_BASE}/landing-message`);
+                if (!response.ok) throw new Error('Failed to fetch landing message');
+
+                const data = await response.json();
+
+                if (data.enabled) {
+                    document.getElementById('landingTitle').textContent = data.title;
+                    document.getElementById('landingText').textContent = data.message;
+                    document.getElementById('landingMessage').style.display = 'block';
+
+                    // Load release notes if enabled
+                    if (data.releaseNotes && data.releaseNotes.enabled) {
+                        document.getElementById('releaseNotesTitle').textContent = data.releaseNotes.title;
+                        document.getElementById('releaseNotesText').textContent = data.releaseNotes.message;
+                        document.getElementById('releaseNotes').style.display = 'block';
+                    }
+                } else {
+                    // If landing message is disabled, show the app directly
+                    document.getElementById('appContainer').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading landing message:', error);
+                // On error, show the app directly
+                document.getElementById('appContainer').style.display = 'block';
+            }
+        }
+
+        // Enter the app from landing page
+        function enterApp() {
+            document.getElementById('landingMessage').style.display = 'none';
+            document.getElementById('releaseNotes').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+        }
+
+        // Go back to landing page
+        function goToLanding() {
+            // Only show landing if it's enabled
+            const landingMessage = document.getElementById('landingMessage');
+            const releaseNotes = document.getElementById('releaseNotes');
+            if (landingMessage.innerHTML.trim() !== '') {
+                document.getElementById('appContainer').style.display = 'none';
+                document.getElementById('landingMessage').style.display = 'block';
+                // Show release notes if they were previously loaded
+                if (releaseNotes.innerHTML.trim() !== '') {
+                    releaseNotes.style.display = 'block';
+                }
+            }
+        }
 
         // Load players on page load
         async function loadPlayers() {
@@ -219,6 +287,7 @@
 
         // Load players and initialize dropdowns when page loads
         window.addEventListener('DOMContentLoaded', async () => {
+            await loadLandingMessage();
             await loadPlayers();
 
             // Initialize all player input dropdowns
