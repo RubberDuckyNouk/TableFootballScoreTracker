@@ -547,6 +547,13 @@ span.vs {
     text-transform: capitalize;
 }
 
+.stat-games-played {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #888;
+    margin-top: 0.25rem;
+}
+
 .stat-wins {
     display: flex;
     flex-direction: column;
@@ -794,6 +801,10 @@ span.vs {
     .stat-name {
         font-size: 1rem;
         margin: 0 0.5rem;
+    }
+
+    .stat-games-played {
+        font-size: 0.75rem;
     }
 
     .stat-total {
