@@ -190,9 +190,14 @@
             if (isNewPlayer) {
                 item.innerHTML = `<span class="add-new-icon">+</span> Add new player: <strong>${player.name}</strong>`;
             } else {
+                // Show decayed rating with indicator if it's different from stored rating
+                const ratingDisplay = player.decayedRating !== player.rating
+                    ? `${player.decayedRating} pts <span style="color: #ff6b6b; font-size: 0.75rem;">↓</span>`
+                    : `${player.rating} pts`;
+
                 item.innerHTML = `
                     <span style="font-weight: 600;">${player.name}</span>
-                    <span style="font-size: 0.85rem; color: #666; margin-left: auto;">#${player.rank} - ${player.rating} pts</span>
+                    <span style="font-size: 0.85rem; color: #666; margin-left: auto;">#${player.rank} - ${ratingDisplay}</span>
                 `;
                 item.style.display = 'flex';
                 item.style.justifyContent = 'space-between';
@@ -360,6 +365,11 @@
                     const statItem = document.createElement('div');
                     statItem.className = `stat-item ${rankClass} ${hiddenClass}`;
 
+                    // Show decayed rating with indicator if different from stored rating
+                    const ratingDisplay = player.decayedRating !== player.rating
+                        ? `${player.decayedRating} Points <span style="color: #ff6b6b; font-size: 0.85rem;" title="Rating decayed from ${player.rating} due to inactivity">↓</span>`
+                        : `${player.rating} Points`;
+
                     statItem.innerHTML = `
                         <div class="stat-rank">#${rank}</div>
                         <div class="stat-name">
@@ -367,7 +377,7 @@
                             ${rank === 1 ? ' 🏆 🥔 <span style="font-size: 0.8rem; color: #666;">top potato</span>' : ''}
                         </div>
                         <div class="stat-wins">
-                            <div class="stat-total">${player.rating} Points</div>
+                            <div class="stat-total">${ratingDisplay}</div>
                         </div>
                     `;
                     container.appendChild(statItem);

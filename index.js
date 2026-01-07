@@ -46,15 +46,12 @@ function calculateExpectedScore(playerRating, opponentRating) {
 }
 
 /**
- * Calculate new ELO rating after a game
- * @param {number} currentRating - Player's current rating
- * @param {number} opponentRating - Opponent's rating
- * @param {number} actualScore - 1 for win, 0 for loss
+ * Calculate K-factor based on games played
  * @param {number} gamesPlayed - Number of games player has played
- * @param {boolean} isTeamGame - Whether this is a team game (reduces K-factor)
- * @returns {number} New rating
+ * @param {boolean} isTeamGame - Whether this is a team game
+ * @returns {number} K-factor
  */
-function calculateNewRating(currentRating, opponentRating, actualScore, gamesPlayed, isTeamGame = false) {
+function calculateKFactor(gamesPlayed, isTeamGame = false) {
     // K-factor: higher for new players, lower for experienced players
     let K = gamesPlayed < 20 ? 40 : 20;
 
@@ -63,6 +60,18 @@ function calculateNewRating(currentRating, opponentRating, actualScore, gamesPla
         K *= 0.75;
     }
 
+    return K;
+}
+
+/**
+ * Calculate new ELO rating after a game
+ * @param {number} currentRating - Player's current rating
+ * @param {number} opponentRating - Opponent's rating
+ * @param {number} actualScore - 1 for win, 0 for loss
+ * @param {number} K - K-factor to use (should be same for both players in a game)
+ * @returns {number} New rating
+ */
+function calculateNewRating(currentRating, opponentRating, actualScore, K) {
     const expectedScore = calculateExpectedScore(currentRating, opponentRating);
     const newRating = currentRating + K * (actualScore - expectedScore);
 
@@ -97,13 +106,45 @@ async function getOrCreatePlayer(name) {
 }
 
 /**
- * Update player's rating and games_played count
+ * Update player's rating, games_played count, and last_played_at timestamp
  */
 async function updatePlayerRating(playerId, newRating, gamesPlayedIncrement = 1) {
     await pool.query(
-        'UPDATE players SET rating = $1, games_played = games_played + $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+        'UPDATE players SET rating = $1, games_played = games_played + $2, last_played_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
         [newRating, gamesPlayedIncrement, playerId]
     );
+}
+
+/**
+ * Calculate decayed rating based on inactivity
+ * Ratings decay after 7 days of inactivity at a rate of 20 points per week
+ * @param {number} rating - Player's current rating
+ * @param {Date} lastPlayedAt - When the player last played
+ * @returns {number} Decayed rating
+ */
+function calculateDecayedRating(rating, lastPlayedAt) {
+    const DECAY_START_DAYS = 7;  // Start decaying after 7 days
+    const DECAY_PER_WEEK = 20;   // Lose 20 points per week
+    const MINIMUM_RATING = 800;  // Don't decay below this
+
+    const now = new Date();
+    const lastPlayed = new Date(lastPlayedAt);
+    const daysSinceLastPlayed = (now - lastPlayed) / (1000 * 60 * 60 * 24);
+
+    if (daysSinceLastPlayed <= DECAY_START_DAYS) {
+        // No decay yet
+        return rating;
+    }
+
+    // Calculate decay
+    const daysOverThreshold = daysSinceLastPlayed - DECAY_START_DAYS;
+    const weeksInactive = daysOverThreshold / 7;
+    const decay = Math.floor(weeksInactive * DECAY_PER_WEEK);
+
+    // Apply decay but don't go below minimum
+    const decayedRating = Math.max(rating - decay, MINIMUM_RATING);
+
+    return decayedRating;
 }
 
 // Serve static files (CSS, JS, images)
@@ -130,21 +171,24 @@ app.post("/saveSingle", async (req, res) => {
       const winnerPlayer = await getOrCreatePlayer(winner);
       const loserPlayer = await getOrCreatePlayer(loser);
 
-      // Calculate new ratings
+      // Calculate average K-factor for both players (ensures zero-sum rating changes)
+      const winnerK = calculateKFactor(winnerPlayer.games_played, false);
+      const loserK = calculateKFactor(loserPlayer.games_played, false);
+      const avgK = (winnerK + loserK) / 2;
+
+      // Calculate new ratings using the same K-factor for both players
       const winnerNewRating = calculateNewRating(
         winnerPlayer.rating,
         loserPlayer.rating,
         1, // win
-        winnerPlayer.games_played,
-        false // not a team game
+        avgK
       );
 
       const loserNewRating = calculateNewRating(
         loserPlayer.rating,
         winnerPlayer.rating,
         0, // loss
-        loserPlayer.games_played,
-        false // not a team game
+        avgK
       );
 
       // Calculate rating changes
@@ -219,37 +263,40 @@ app.post("/saveTeam", async (req, res) => {
         (loserAttackPlayer.rating + loserDefensePlayer.rating) / 2
       );
 
-      // Calculate new ratings for each player (using team average as opponent rating)
+      // Calculate average K-factor for all 4 players (ensures zero-sum rating changes)
+      const winnerAttackK = calculateKFactor(winnerAttackPlayer.games_played, true);
+      const winnerDefenseK = calculateKFactor(winnerDefensePlayer.games_played, true);
+      const loserAttackK = calculateKFactor(loserAttackPlayer.games_played, true);
+      const loserDefenseK = calculateKFactor(loserDefensePlayer.games_played, true);
+      const avgK = (winnerAttackK + winnerDefenseK + loserAttackK + loserDefenseK) / 4;
+
+      // Calculate new ratings for each player using the same K-factor
       const winnerAttackNewRating = calculateNewRating(
         winnerAttackPlayer.rating,
         losingTeamAvgRating,
         1, // win
-        winnerAttackPlayer.games_played,
-        true // team game
+        avgK
       );
 
       const winnerDefenseNewRating = calculateNewRating(
         winnerDefensePlayer.rating,
         losingTeamAvgRating,
         1, // win
-        winnerDefensePlayer.games_played,
-        true // team game
+        avgK
       );
 
       const loserAttackNewRating = calculateNewRating(
         loserAttackPlayer.rating,
         winningTeamAvgRating,
         0, // loss
-        loserAttackPlayer.games_played,
-        true // team game
+        avgK
       );
 
       const loserDefenseNewRating = calculateNewRating(
         loserDefensePlayer.rating,
         winningTeamAvgRating,
         0, // loss
-        loserDefensePlayer.games_played,
-        true // team game
+        avgK
       );
 
       // Save game with rating information
@@ -316,18 +363,38 @@ app.post("/saveTeam", async (req, res) => {
 //get all unique player names
 app.get("/players", async (req, res) => {
   try {
-    // Get all players from players table with their rankings
+    // Get all players from players table
     const playersQuery = `
       SELECT
         name,
         rating,
-        RANK() OVER (ORDER BY rating DESC) as rank
+        last_played_at
       FROM players
       ORDER BY name
     `;
 
     const result = await pool.query(playersQuery);
-    const players = result.rows;
+
+    // Apply decay and calculate rankings
+    const players = result.rows.map(player => ({
+      name: player.name,
+      rating: player.rating,
+      decayedRating: calculateDecayedRating(player.rating, player.last_played_at)
+    }));
+
+    // Sort by decayed rating and add rank
+    players.sort((a, b) => b.decayedRating - a.decayedRating);
+
+    let currentRank = 1;
+    players.forEach((player, index) => {
+      if (index > 0 && player.decayedRating < players[index - 1].decayedRating) {
+        currentRank = index + 1;
+      }
+      player.rank = currentRank;
+    });
+
+    // Re-sort by name for display
+    players.sort((a, b) => a.name.localeCompare(b.name));
 
     res.json(players);
   } catch (err) {
@@ -429,34 +496,38 @@ app.get("/stats", async (req, res) => {
       playerStats[name].totalLosses += parseInt(row.losses);
     });
 
-    // Get ratings from players table
+    // Get ratings and last_played_at from players table
     const ratingsQuery = await pool.query(
-      'SELECT LOWER(name) as player_name, rating, games_played FROM players'
+      'SELECT LOWER(name) as player_name, rating, games_played, last_played_at FROM players'
     );
 
-    // Add ratings to player stats
+    // Add ratings and calculate decayed ratings
     ratingsQuery.rows.forEach(row => {
       const name = row.player_name;
       if (playerStats[name]) {
         playerStats[name].rating = row.rating;
         playerStats[name].gamesPlayed = row.games_played;
+        playerStats[name].lastPlayedAt = row.last_played_at;
+        playerStats[name].decayedRating = calculateDecayedRating(row.rating, row.last_played_at);
       }
     });
 
-    // Convert to array and sort by rating (highest first)
+    // Convert to array and sort by decayed rating (highest first)
     const statsArray = Object.entries(playerStats)
       .map(([name, stats]) => ({
         name: name.charAt(0).toUpperCase() + name.slice(1), // Capitalize first letter for display
         rating: stats.rating || 1200, // Default rating if not found
+        decayedRating: stats.decayedRating || 1200,
         gamesPlayed: stats.gamesPlayed || 0,
+        lastPlayedAt: stats.lastPlayedAt,
         ...stats
       }))
-      .sort((a, b) => b.rating - a.rating); // Sort by rating instead of wins
+      .sort((a, b) => b.decayedRating - a.decayedRating); // Sort by decayed rating
 
     // Add rank with proper tie handling
     let currentRank = 1;
     statsArray.forEach((player, index) => {
-      if (index > 0 && player.rating < statsArray[index - 1].rating) {
+      if (index > 0 && player.decayedRating < statsArray[index - 1].decayedRating) {
         currentRank = index + 1; // Skip ranks for ties
       }
       player.rank = currentRank;
