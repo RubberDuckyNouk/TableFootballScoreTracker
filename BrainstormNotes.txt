@@ -1,0 +1,9 @@
+Multi office support
+
+- Have office profiles
+- take minimum of personal info, preferably no email
+
+Office account with general office name + pw
+On landing page: option to login or register office
+generate office QR that automatically fills in office name and pw if possible
+Display message that profile will be deleted due to inactivity once last logged game is more that 2 months ago.
