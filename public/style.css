@@ -169,6 +169,7 @@ h1:hover {
 }
 
 .toggle-btn {
+    flex: 1;
     padding: 0.75rem 2rem;
     font-size: 1rem;
     font-weight: 600;
