@@ -5,7 +5,7 @@ const isProduction = process.env.NODE_ENV === 'production'; //only use SSL db co
     // Create a PostgreSQL connection pool --> keeps connection to db fast when in use
     const pool = new Pool({
         connectionString: process.env.DATABASE_URL,
-        ssl: isProduction ? { rejectUnauthorized: false } : false
+        ssl: process.env.DB_SSL === "false" ? false : (isProduction ? { rejectUnauthorized: false } : false)
       });
 
     // connection message for testing
